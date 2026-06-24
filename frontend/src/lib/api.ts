@@ -40,7 +40,7 @@ export interface UploadedFile {
   created_at: string;
 }
 
-function getToken(): string | null {
+export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("access_token");
 }

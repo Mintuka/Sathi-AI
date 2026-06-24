@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { ChatInput, ChatMessage, TypingIndicator } from "@/components/Chat";
 import { Sidebar } from "@/components/Sidebar";
-import { api, clearToken, type Conversation, type Message } from "@/lib/api";
-import { signOut, useSession } from "@/lib/auth-client";
+import { api, getToken, type Conversation, type Message } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 
 const GREETINGS = [
   "What's on the agenda today?",
@@ -17,7 +17,7 @@ const GREETINGS = [
 ];
 
 export function ChatApp() {
-  const { data: session } = useSession();
+  const { user, isAuthenticated, refresh, logout } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -28,8 +28,6 @@ export function ChatApp() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [greeting, setGreeting] = useState(GREETINGS[0]);
 
-  const isAuthenticated = !!session?.user;
-
   useEffect(() => {
     setGreeting(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
   }, []);
@@ -39,14 +37,14 @@ export function ChatApp() {
   };
 
   const loadConversations = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!getToken()) return;
     try {
       const convs = await api.getConversations();
       setConversations(convs);
     } catch {
       /* token may be invalid */
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const loadConversation = useCallback(async (id: string) => {
     setLoading(true);
@@ -62,8 +60,8 @@ export function ChatApp() {
   }, []);
 
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (user) loadConversations();
+  }, [user, loadConversations]);
 
   useEffect(() => {
     scrollToBottom();
@@ -122,20 +120,15 @@ export function ChatApp() {
   };
 
   const handleLogout = async () => {
-    try {
-      await api.logout();
-    } catch {
-      /* ignore */
-    }
-    await signOut();
-    clearToken();
+    await logout();
     setConversations([]);
     setMessages([]);
     setActiveConversationId(null);
   };
 
-  const handleAuthSuccess = () => {
-    loadConversations();
+  const handleAuthSuccess = async () => {
+    await refresh();
+    await loadConversations();
   };
 
   return (
@@ -144,8 +137,8 @@ export function ChatApp() {
         conversations={conversations}
         activeId={activeConversationId}
         collapsed={sidebarCollapsed}
-        userName={session?.user?.name || null}
-        userEmail={session?.user?.email || null}
+        userName={user?.name || null}
+        userEmail={user?.email || null}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         onNewChat={handleNewChat}
         onSelectConversation={handleSelectConversation}

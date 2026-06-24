@@ -4,7 +4,6 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 import { api, setToken } from "@/lib/api";
-import { signIn, signUp } from "@/lib/auth-client";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -28,29 +27,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setError(null);
 
     try {
-      if (mode === "signup") {
-        const { error: authError } = await signUp.email({
-          email,
-          password,
-          name,
-        });
-        if (authError) throw new Error(authError.message);
+      const response =
+        mode === "signup"
+          ? await api.register(email, password, name)
+          : await api.login(email, password);
 
-        try {
-          const response = await api.register(email, password, name);
-          setToken(response.access_token);
-        } catch {
-          const response = await api.login(email, password);
-          setToken(response.access_token);
-        }
-      } else {
-        const { error: authError } = await signIn.email({ email, password });
-        if (authError) throw new Error(authError.message);
-
-        const response = await api.login(email, password);
-        setToken(response.access_token);
-      }
-
+      setToken(response.access_token);
       onSuccess();
       onClose();
       setEmail("");

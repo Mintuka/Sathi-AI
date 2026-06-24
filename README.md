@@ -4,7 +4,7 @@ A full-stack ChatGPT-like chat application with authentication, file upload, and
 
 ## Stack
 
-- **Frontend**: Next.js 16, BetterAuth, Tailwind CSS
+- **Frontend**: Next.js 16, Tailwind CSS
 - **Backend**: FastAPI, SQLAlchemy, JWT authentication
 - **Database**: PostgreSQL
 - **Infrastructure**: Docker Compose
@@ -42,16 +42,9 @@ cp frontend/.env.example frontend/.env
 cp docker/.env.example docker/.env
 ```
 
-Set secrets in `backend/.env`, `frontend/.env`, and `docker/.env` (Postgres password). Do not commit `.env` files.
+Set secrets in `backend/.env` (including `DATABASE_URL`), `frontend/.env`, and `docker/.env`. Do not commit `.env` files.
 
-### 2. Start PostgreSQL
-
-```bash
-cd docker
-docker compose up postgres -d
-```
-
-### 3. Backend
+### 2. Backend
 
 ```bash
 cd backend
@@ -62,13 +55,12 @@ cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 4. Frontend
+### 3. Frontend
 
 ```bash
 cd frontend
 cp .env.example .env
 npm install
-npx prisma db push
 npm run dev
 ```
 
@@ -76,7 +68,7 @@ Open http://localhost:3000
 
 ## Features
 
-- **Authentication**: Sign up, log in, and log out via BetterAuth (frontend) and FastAPI JWT endpoints (backend)
+- **Authentication**: Sign up, log in, and log out via FastAPI JWT endpoints
 - **Chat interface**: ChatGPT-style dark UI with sidebar, conversation history, and message threads
 - **File upload**: Attach text/code files to messages; content is included in AI context
 - **AI responses**: Set `OPENAI_API_KEY` for real GPT responses, or use built-in demo mode
@@ -113,7 +105,4 @@ Open http://localhost:3000
 ### Frontend (`frontend/.env`)
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | BetterAuth secret (32+ chars) |
-| `BETTER_AUTH_URL` | Frontend URL |
 | `NEXT_PUBLIC_API_URL` | Backend API URL |
